@@ -22,7 +22,7 @@ def find_round_title_idx(text_split: List[str]) -> Tuple[List[int], List[str]]:
             except ValueError:
                 # Only append if text has no '.' and is not in unique_names
                 if '.' not in text and text not in unique_names:
-                    print(f"Found title: {text}")
+                    # print(f"Found title: {text}")
                     round_indices.append(i)
                     titles.append(text)
 
