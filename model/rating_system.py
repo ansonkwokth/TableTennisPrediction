@@ -1,8 +1,9 @@
 import numpy as np
 from tqdm import tqdm
+from math import comb
 
 class RatingSystem:
-    def __init__(self, params=None, learning_rate=0.01, base_param=(0, 1), update_sigma=True, verbose=False):
+    def __init__(self, learning_rate=0.01, base_param=(0, 1), update_sigma=True, verbose=False):
         """
         Initialize the rating system.
 
@@ -254,3 +255,4 @@ class RatingSystem:
         acc = correct / n_matches
         print(f'\n === Accuracy: {acc} === \n')
         return acc, np.array(history), np.array(predictions)
+

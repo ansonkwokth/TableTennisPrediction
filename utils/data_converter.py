@@ -1,5 +1,16 @@
-def find_round_title_idx(text_split: List[str]) -> Tuple[List[int], List[str]]:
+import numpy as np
+import pandas as pd
+from math import comb
+from typing import *
+from datetime import datetime, timedelta
 
+
+SPECIAL_NAME = ['Cho Seungmin', 'Wong Chun Ting', 'Lam Siu Hang', 'Xu Yingbin', 'Wang Lichen', 'Cho Ki Jeong']
+INFO_COL = ['ID', 'Round', 'Datetime', 'Player', 'Game']
+
+
+
+def find_round_title_idx(text_split: List[str]) -> Tuple[List[int], List[str]]:
     unique_names = ['-', 'WO', '', 'Awrd'] + SPECIAL_NAME
     round_indices = []
     titles = []
@@ -40,6 +51,27 @@ def put_to_dt(text_split: List[str], idx: List[int]) -> Dict[int, List[str]]:
             dt[index] = text_split[index + 1:]
 
     return dt
+
+
+    
+def find_time_idx(text_split: List[str]) -> List[int]:
+  """
+  Finds indices in a list where the items contain a colon (':'),
+  indicating a potential time entry.
+
+  Args:
+      text_split (List[str]): List of text items to search.
+
+  Returns:
+      List[int]: List of indices where items contain a colon.
+  """
+  time_indices = []
+
+  for i, text in enumerate(text_split):
+      if text and ':' in text:
+          time_indices.append(i)
+
+  return time_indices
 
 
 
@@ -90,6 +122,7 @@ def create_all_lt(dt_title: Dict[int, List[str]], text_split: List[str], year: i
     return all_games
 
 
+
 def create_df(all_lt: List[List[Any]]) -> pd.DataFrame:
     """
     Converts a list of game data into a DataFrame with appropriately labeled columns.
@@ -118,7 +151,6 @@ def create_df(all_lt: List[List[Any]]) -> pd.DataFrame:
     df['Time'] = pd.to_datetime(df['Datetime'], format="%Y.%d.%m. %H:%M", errors='coerce').dt.time
 
     return df[INFO_COL + ['Date', 'Time'] + set_column_names]
-
 
 
 
@@ -155,6 +187,8 @@ def read_file(file_path: str) -> str:
     with open(file_path, 'r') as file:
         return file.read()
 
+
+
 def load_game_data(game: str, years: list) -> dict:
     """Loads game data for the specified game and years into a dictionary."""
     text_data = {}
@@ -176,6 +210,7 @@ def create_game_dfs(game: str, years: list, text_data: dict) -> pd.DataFrame:
     df_tot.sort_values(by=['Date', 'Time'], inplace=True)
     df_tot.reset_index(drop=True, inplace=True)
     return df_tot
+
 
 
 
