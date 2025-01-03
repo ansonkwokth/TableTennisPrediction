@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
-from math import comb
 from typing import *
 from datetime import datetime, timedelta
-
 
 SPECIAL_NAME = ['Cho Seungmin', 'Wong Chun Ting', 'Lam Siu Hang', 'Xu Yingbin', 'Wang Lichen', 'Cho Ki Jeong']
 INFO_COL = ['ID', 'Round', 'Datetime', 'Player', 'Game']
@@ -26,7 +24,6 @@ def find_round_title_idx(text_split: List[str]) -> Tuple[List[int], List[str]]:
                     round_indices.append(i)
                     titles.append(text)
 
-    print()
     return round_indices, titles
 
 
@@ -194,8 +191,9 @@ def load_game_data(game: str, years: list, data_dir: str = './data') -> dict:
     text_data = {}
     for year in years:
         file_path = f'{data_dir}/{game}{year}.txt'
+        print(f"Loading {file_path}")
         text_data[year] = read_file(file_path)
-
+        
     return text_data
 
 
