@@ -189,11 +189,11 @@ def read_file(file_path: str) -> str:
 
 
 
-def load_game_data(game: str, years: list) -> dict:
+def load_game_data(game: str, years: list, data_dir: str = './data') -> dict:
     """Loads game data for the specified game and years into a dictionary."""
     text_data = {}
     for year in years:
-        file_path = f'./{game}{year}.txt'
+        file_path = f'{data_dir}/{game}{year}.txt'
         text_data[year] = read_file(file_path)
 
     return text_data
