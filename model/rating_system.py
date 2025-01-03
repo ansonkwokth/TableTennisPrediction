@@ -2,7 +2,45 @@ import numpy as np
 from tqdm import tqdm
 from math import comb
 
-class RatingSystem:
+
+class ProbCalculator:
+    
+    @staticmethod
+    def _add_sigma(sigma1, sigma2):
+        return np.sqrt(sigma1**2 + sigma2**2)
+
+        
+
+    @staticmethod
+    def predict_set_config_from_p(p):
+        q = 1 - p
+        dt = {}
+        # Calculate probabilities for the first 10+ points won by player 1
+        for i in range(10):
+            prob = comb(10 + i, 10) * p**11 * q**i
+            dt[10 + i + 1] = prob  # Store probability for player 1 winning 11, 12, ... points
+        # Calculate probability for the special case of winning exactly 22 points
+        dt[22] = (1 / (1 - 2 * q * p)) * comb(20, 10) * p**12 * q**10
+
+        return dt
+
+
+
+    @staticmethod
+    def predict_game_config_from_p(p, n_win_sets=3):
+        q = 1 - p
+        dt = {}
+        # Calculate probabilities for winning n_win_sets, n_win_sets+1, ...
+        for i in range(n_win_sets):
+            prob = comb(n_win_sets - 1 + i, n_win_sets - 1) * p**n_win_sets * q**i
+            dt[n_win_sets + i] = prob  # Store probability for winning sets
+
+        return dt
+
+
+
+
+class RatingSystem(ProbCalculator):
     def __init__(self, learning_rate=0.01, base_param=(0, 1), update_sigma=True, verbose=False):
         """
         Initialize the rating system.
@@ -22,13 +60,13 @@ class RatingSystem:
     def params(self):
         return self._params
 
-        
     @params.setter
     def params(self, input_params):
         self._params = input_params
 
 
-    def _get_param(self, player):
+
+    def get_player_param(self, player):
         """
         Retrieve the current rating of a player. If the player does not exist, raise an error.
 
@@ -39,12 +77,7 @@ class RatingSystem:
 
 
 
-    def _add_sigma(self, sigma1, sigma2):
-        return np.sqrt(sigma1**2 + sigma2**2)
-
-
-
-    def expected_prob(self, param1, param2):
+    def _expected_prob(self, param1, param2):
         """
         Calculate the expected prob. for Player A against Player B.
 
@@ -75,61 +108,31 @@ class RatingSystem:
             for player in [player1, player2]:
                 if player not in self._params: print(f'Player "{player}" not found. initialize param: {self.base_param}')
 
-        param1 = self._get_param(player1)
-        param2 = self._get_param(player2)
-        return self.expected_prob(param1, param2)
+        param1 = self.get_player_param(player1)
+        param2 = self.get_player_param(player2)
+        return self._expected_prob(param1, param2)
 
 
-
-    def _predict_set_config_from_p(self, p):
-        q = 1 - p
-        dt = {}
-
-        # Calculate probabilities for the first 10+ points won by player 1
-        for i in range(10):
-            prob = comb(10 + i, 10) * p**11 * q**i
-            dt[10 + i + 1] = prob  # Store probability for player 1 winning 11, 12, ... points
-        # Calculate probability for the special case of winning exactly 22 points
-        dt[22] = (1 / (1 - 2 * q * p)) * comb(20, 10) * p**12 * q**10
-
-        return dt
-
-        
 
     def predict_set_config(self, player1, player2):
         p = self.predict_point(player1, player2)
-        return self._predict_set_config_from_p(p)
-
+        return self.predict_set_config_from_p(p)
 
     def predict_set(self, player1, player2):
         return sum(self.predict_set_config(player1, player2).values())
 
 
 
-    def _predict_game_config_from_p(self, p, n_win_sets=3):
-        q = 1 - p
-        dt = {}
-
-        # Calculate probabilities for winning n_win_sets, n_win_sets+1, ...
-        for i in range(n_win_sets):
-            prob = comb(n_win_sets - 1 + i, n_win_sets - 1) * p**n_win_sets * q**i
-            dt[n_win_sets + i] = prob  # Store probability for winning sets
-
-        return dt
-
     def predict_game_config(self, player1, player2, n_win_sets=3):
         p = self.predict_set(player1, player2)
-        return self._predict_game_config_from_p(p, n_win_sets)        
-
-
+        return self.predict_game_config_from_p(p, n_win_sets)        
 
     def predict_game(self, player1, player2):
         return sum(self.predict_game_config(player1, player2).values())
 
 
 
-
-    def add_player(self, player, param=None):
+    def _add_player(self, player, param=None):
         """
         Add a new player with an optional custom rating.
 
@@ -155,9 +158,7 @@ class RatingSystem:
 
 
 
-
-
-    def update_params(self, player1, player2, result1):
+    def _update_params(self, player1, player2, result1):
         """
         Update ratings for two players after a match.
 
@@ -165,10 +166,10 @@ class RatingSystem:
         :param player2: Name or identifier of Player 2.
         :param result1: Result for Player 1 (points1 / points_tot).
         """
-        param1 = self._get_param(player1)
-        param2 = self._get_param(player2)  # Fixed to get params for player2 instead of player1
+        param1 = self.get_player_param(player1)
+        param2 = self.get_player_param(player2)  # Fixed to get params for player2 instead of player1
 
-        expected1 = self.expected_prob(param1, param2)
+        expected1 = self._expected_prob(param1, param2)
         mu_diff = param1[0] - param2[0]
         sigma_tot = self._add_sigma(param1[1], param2[1])
 
@@ -191,6 +192,7 @@ class RatingSystem:
         )
 
 
+
     def fit(self, dataset):
         """
         Fit the model to a dataset of matches.
@@ -202,12 +204,9 @@ class RatingSystem:
         """
         for matchi in tqdm(dataset):
             matchi = matchi.T
-
             player1, player2 = matchi[0]
 
-
             for seti in matchi[1:]:
-                # seti = [int(si) for si in seti]
                 points1, points2 = seti
                 if np.isnan(points1) or np.isnan(points2): continue
                 points_sum = points1 + points2
@@ -216,43 +215,13 @@ class RatingSystem:
                 result1 = points1 / points_sum
 
                 # # Add players to the system if they are not already in
-                self.add_player(player1)
-                self.add_player(player2)
+                self._add_player(player1)
+                self._add_player(player2)
 
                 # # Update ratings based on the match result
-                self.update_params(player1, player2, result1)
+                self._update_params(player1, player2, result1)
 
 
 
 
-    def evaluate(self, dataset):
-        verbose_ = self.verbose
-        self.verbose = False
-        correct = 0
-        n_matches = 0
-
-        history = []
-        predictions = []
-        for matchi in tqdm(dataset):
-            matchi = matchi.T
-            player1, player2 = matchi[0]
-
-            p = self.predict_game(player1, player2)
-            if p == 0.5: continue
-            whowillwin = 0 if p > 0.5 else 1
-
-            win1 = sum(matchi[1:, 0]>matchi[1:, 1])
-            win2 = sum(matchi[1:, 0]<matchi[1:, 1])
-            whowon = 0 if win1 > win2 else 1
-
-            history.append(win1/(win1 + win2))
-            predictions.append(p)
-
-            n_matches += 1
-            if (whowon == whowillwin): correct += 1
-        self.verbose = verbose_
-
-        acc = correct / n_matches
-        print(f'\n === Accuracy: {acc} === \n')
-        return acc, np.array(history), np.array(predictions)
 
