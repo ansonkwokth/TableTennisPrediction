@@ -39,7 +39,7 @@ class Elo(RatingSystem):
         :param player: The player's name.
         :return: Current rating of the player.
         """
-        return self.params.get(player, self.base_rate)
+        return (player in self.params), self.params.get(player, self.base_rate)
 
 
 
@@ -105,8 +105,8 @@ class Elo(RatingSystem):
         :param player2: Name or identifier of Player 2.
         :param result1: Result for Player 1 (points1 / points_tot).
         """
-        param1 = self.get_player_param(player1)
-        param2 = self.get_player_param(player2)  
+        found_p1, param1 = self.get_player_param(player1)
+        found_p2, param2 = self.get_player_param(player2)  
         
         expected1 = self._expected_prob(param1, param2)
         mu_diff = param1 - param2
@@ -121,4 +121,5 @@ class Elo(RatingSystem):
         self.params[player1] = param1 + self.learning_rate * mu1_update
         self.params[player2] = param2 + self.learning_rate * mu2_update
         
+
 

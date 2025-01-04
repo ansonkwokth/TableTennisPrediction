@@ -20,6 +20,9 @@ class RatingSystem:
         self.learning_rate = learning_rate
         self.verbose = verbose
 
+        self._found_p1 = None
+        self._found_p2 = None
+
 
 
     @staticmethod
@@ -62,7 +65,7 @@ class RatingSystem:
 
 
 
-    def predict_point(self, player1, player2):
+    def _predict_point(self, player1, player2):
         """
         Predict the probability of Player 1 winning a point against Player 2.
 
@@ -71,10 +74,14 @@ class RatingSystem:
         :return: Probability of Player 1 winning a point.
         """
         self._prediction_verbose(player1, player1)
-        param1 = self.get_player_param(player1)
-        param2 = self.get_player_param(player2)
+        self._found_p1, param1 = self._get_player_param(player1)
+        self._found_p2, param2 = self._get_player_param(player2)
         return self._expected_prob(param1, param2)
 
+        
+    def predict_point(self, player1, player2):
+        p = self._predict_point(player1, player2)
+        return self._found_p1, self._found_p2, p
 
 
     def predict_set_config(self, player1, player2):
@@ -87,9 +94,8 @@ class RatingSystem:
         :param player2: Name of Player 2.
         :return: dict of probabilities of Player 1 winning the set with total 'n' points.
         """
-        p = self.predict_point(player1, player2)
-        return self.predict_set_config_from_p(p)
-
+        ps = self.predict_set_config_from_p(self._predict_point(player1, player2))
+        return self._found_p1, self._found_p2, ps
 
 
     def predict_set(self, player1, player2):
@@ -100,9 +106,9 @@ class RatingSystem:
         :param player2: Name of Player 2.
         :return: Probability of Player 1 winning the set
         """
-        return sum(self.predict_set_config(player1, player2).values())
+        _, _, ps = self.predict_set_config(player1, player2)
+        return self._found_p1, self._found_p2, sum(ps.values())
 
-    
     
     def predict_game_config(self, player1, player2, n_win_sets=3):
         """
@@ -115,9 +121,9 @@ class RatingSystem:
         :param n_win_sets: Number of winning sets to win the game
         :return: dict of probabilities of Player 1 winning the game with total 'n' sets.
         """
-        p = self.predict_set(player1, player2)
-        return self.predict_game_config_from_p(p, n_win_sets)   
-
+        _, _, p_set = self.predict_set(player1, player2)
+        p = self.predict_game_config_from_p(p_set, n_win_sets) 
+        return self._found_p1, self._found_p2, p
 
 
     def predict_game(self, player1, player2):
@@ -128,7 +134,8 @@ class RatingSystem:
         :param player2: Name of Player 2.
         :return: Probability of Player 1 winning the game
         """
-        return sum(self.predict_game_config(player1, player2).values())
+        _, _, ps = self.predict_game_config(player1, player2)
+        return self._found_p1, self._found_p2, sum(ps.values())
 
 
 
@@ -174,4 +181,5 @@ class RatingSystem:
 
                 # Update ratings based on the match result
                 self._update_params(player1, player2, result1)
+
 
