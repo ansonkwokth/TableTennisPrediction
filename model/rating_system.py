@@ -162,10 +162,10 @@ class RatingSystem:
         for matchi in tqdm(dataset, desc="Training model"):
             matchi = matchi.T
             # the first row are the players 
-            player1, player2 = matchi[0]
+            player1, player2 = matchi[1]
             
             # loop over sets in the match
-            for seti in matchi[1:]:
+            for seti in matchi[2:]:
                 points1, points2 = seti
                 # skip nan entries
                 if np.isnan(points1) or np.isnan(points2): continue
