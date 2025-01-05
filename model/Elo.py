@@ -4,14 +4,14 @@ from model.rating_system import RatingSystem
 
 
 class Elo(RatingSystem):
-    def __init__(self, learning_rate=32, base_rate=1000, verbose=False):
+    def __init__(self, learning_rate=32, base_rate=1000, binary=False, verbose=False):
         """
         Initialize the Elo rating system.
 
         :param learning_rate: Learning rate.
         :param params: Rate for the players.
         """
-        super().__init__(learning_rate=learning_rate, verbose=verbose)
+        super().__init__(learning_rate=learning_rate, binary=binary, verbose=verbose)
 
         if not isinstance(base_rate, (float, int)):
             raise TypeError(f"Expected 'base_rate' to be an float/int, but got {type(base_rate).__name__}")
@@ -111,8 +111,6 @@ class Elo(RatingSystem):
         expected1 = self._expected_prob(param1, param2)
         mu_diff = param1 - param2
 
-        result1 = 1 if result1 > 0.5 else 0
-
         # Calculate updates
         mu1_update = (result1 - expected1)
         mu2_update = ((1-result1) - expected1)
@@ -121,5 +119,6 @@ class Elo(RatingSystem):
         self.params[player1] = param1 + self.learning_rate * mu1_update
         self.params[player2] = param2 + self.learning_rate * mu2_update
         
+
 
 

@@ -4,7 +4,7 @@ from model.rating_system import RatingSystem
 
 
 class ModifiedElo(RatingSystem):
-    def __init__(self, learning_rate=0.1, base_param=(0, 1), update_sigma=True, verbose=False):
+    def __init__(self, learning_rate=0.1, base_param=(0, 1), update_sigma=True, binary=False, verbose=False):
         """
         Initialize the rating system.
 
@@ -12,7 +12,7 @@ class ModifiedElo(RatingSystem):
         :param params: Parameters for the players.
         :param update_sigma: Update also sigma during the gradient descent.
         """
-        super().__init__(learning_rate=learning_rate, verbose=verbose)
+        super().__init__(learning_rate=learning_rate, binary=binary, verbose=verbose)
 
         if not isinstance(base_param, tuple):
             raise TypeError(f"Expected 'base_param' to be a tuple, but got {type(base_param).__name__}")
@@ -140,6 +140,7 @@ class ModifiedElo(RatingSystem):
             param2[0] - self.learning_rate * mu2_update,
             param2[1] - self.learning_rate * sigma2_update
         )
+
 
 
 

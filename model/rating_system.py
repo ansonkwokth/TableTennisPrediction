@@ -6,7 +6,7 @@ from math import comb
 
 class RatingSystem:
 
-    def __init__(self, learning_rate=32, verbose=False):
+    def __init__(self, learning_rate=32, binary=False, verbose=False):
         
         if not isinstance(learning_rate, (float, int)):
             raise TypeError(f"Expected 'learning_rate' to be an float/int, but got {type(learning_rate).__name__}")
@@ -18,6 +18,7 @@ class RatingSystem:
 
         self.params = {} 
         self.learning_rate = learning_rate
+        self.binary = binary
         self.verbose = verbose
 
         self._found_p1 = None
@@ -174,6 +175,7 @@ class RatingSystem:
                 if points_sum == 0: continue
 
                 result1 = points1 / points_sum
+                if self.binary: result1 = result1 = 1 if result1 > 0.5 else 0
 
                 # Add players to the system if they are not already in
                 self._add_player(player1)
@@ -181,5 +183,6 @@ class RatingSystem:
 
                 # Update ratings based on the match result
                 self._update_params(player1, player2, result1)
+
 
 
