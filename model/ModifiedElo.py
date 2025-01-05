@@ -33,7 +33,7 @@ class ModifiedElo(RatingSystem):
 
         
     def __repr__(self):
-        return f"EloLike(learning_rate={self.learning_rate}, base_param={self.base_param}, update_sigma={self.update_sigma}, verbose={self.verbose})"
+        return f"ModifiedElo(learning_rate={self.learning_rate}, base_param={self.base_param}, update_sigma={self.update_sigma}, verbose={self.verbose})"
        
 
 
